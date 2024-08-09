@@ -10,22 +10,28 @@
   background-color: #2196F3;
   color: #fff;
 }
+.fused{
+  background-color: #2222ff;
+}
 </style>
 <body>
 
 <div id="element" class="element">
   Click here to move
 </div>
-<div id="element2" class="element">
-  Click here to move
+<div id="element2" class="element" style="top: 100px;">
+  Click here to move 2
+</div>
+<div id="element3" class="element" style="top: 200px;">
+  Click here to move 3
 </div>
 <script>
 //Make the DIV element draggagle:
 dragElement(document.getElementById("element"));
 dragElement(document.getElementById("element2"));
+dragElement(document.getElementById("element3"));
 
 function dragElement(elmnt) {
-  console.log(elmnt)
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
   elmnt.onmousedown = dragMouseDown;
   function dragMouseDown(e) {
@@ -52,10 +58,22 @@ function dragElement(elmnt) {
     elmnt.style.left = (elmnt.offsetLeft - pos1) + "px";
   }
 
-  function closeDragElement() {
+  function closeDragElement(e) {
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+
+    // detecta el elemento que esta bajo el que esta siendo arrastrado
+    elmnt.style.pointerEvents = 'none'
+    const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
+    elmnt.style.pointerEvents = 'auto'
+    
+  if (dropTarget && dropTarget.classList.contains('element')) {
+      // Fusionar elementos
+      dropTarget.classList.add('fused');
+      dropTarget.append("!")
+      elmnt.style.display = 'none'; // Oculta el elemento arrastrado
+  }
   }
 }
 </script>
