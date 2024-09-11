@@ -9,6 +9,8 @@
   padding: 10px;
   background-color: #2196F3;
   color: #fff;
+  width: 20px;
+  height: 20px;
 }
 .fused{
   background-color: #2222ff;
@@ -17,19 +19,12 @@
 <body>
 
 <div id="element" class="element">
-  Click here to move
-</div>
-<div id="element2" class="element" style="top: 100px;">
-  Click here to move 2
-</div>
-<div id="element3" class="element" style="top: 200px;">
-  Click here to move 3
+  H
 </div>
 <script>
+
 //Make the DIV element draggagle:
 dragElement(document.getElementById("element"));
-dragElement(document.getElementById("element2"));
-dragElement(document.getElementById("element3"));
 
 function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
@@ -74,6 +69,41 @@ function dragElement(elmnt) {
       dropTarget.append("!")
       elmnt.style.display = 'none'; // Oculta el elemento arrastrado
   }
+  }
+
+  // Agregar en lugares aleatorios
+  const imgPoss = [];
+  const size = 40
+
+
+  let maxX, maxY;
+
+  function placeElement(x,y) {
+      const imgSrc = imgPoss.length;
+      const parser = new DOMParser();
+ 
+        
+          var link = `<div id="element${imgSrc}" class="element" style="left: ${x}px; top: ${y}px;">H</div>`;
+         
+        // Parse the element string
+        const doc = parser.parseFromString(link, 'text/html');
+        const element = doc.body.firstChild;
+        document.body.appendChild(element)
+          
+          imgPoss.push({x, y}); // record all img positions esto no es necesario, cambiarlo por una variable que lleve la cuenta
+          dragElement(element);
+      
+  }
+  
+  // Hay que mover esto fuera de la funcion dragElement()
+  onload = function() {
+      maxX = innerWidth;
+      maxY = innerHeight;
+      for(let x = maxX; x > 0; x -= size){
+        for(let y = maxY; y > 0; y -= size){
+          placeElement(x,y)
+        }
+      }
   }
 }
 </script>
