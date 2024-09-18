@@ -1,33 +1,111 @@
 <!DOCTYPE html>
 <html>
 <style>
-.element {
+  :root {
+  color-scheme: light dark;
+}
+body {
+  color: light-dark(#121212, #ffffffd0);
+  background-color: light-dark(#ffffffd0, #121212);
+}
+.atomic-number {
   position: absolute;
-  z-index: 9;
+  top: 10px;
+  left: 10px;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.element-symbol {
+  font-size: 60px;
+  position: relative;
+  top: -20px;
+  font-weight: bold;
   text-align: center;
-  border: 1px solid #d3d3d3;
-  padding: 10px;
-  background-color: #2196F3;
-  color: #fff;
-  width: 20px;
-  height: 20px;
+}
+
+.element-name {
+  position: absolute;
+  bottom: 40px;
+  width: 100%;
+  text-align: center;
+  font-size: 24px;
+}
+
+.atomic-weight {
+  position: absolute;
+  bottom: 10px;
+  width: 100%;
+  text-align: center;
+  font-size: 16px;
+}
+
+.periodic-element {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+  border-radius: 5px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+  width: 150px;
+  height: 150px;
+  outline: 5px solid rgb(17, 31, 160);
 }
 .fused{
   background-color: #2222ff;
 }
+.hold{
+  z-index: 10;
+}
 </style>
 <body>
 
-<div id="element" class="element">
-  H
-</div>
 <script>
+let idNumber = 0;
+function createPeriodicElement(atomicNumber, symbol, name, weight, x, y) {
+    const elementDiv = document.createElement('div');
+    elementDiv.className = 'periodic-element';
+    elementDiv.style.left = `${x}px`;
+    elementDiv.style.top = `${y}px`;
+    elementDiv.id = `element${idNumber}`;
 
-//Make the DIV element draggagle:
-dragElement(document.getElementById("element"));
+    elementDiv.innerHTML = `
+        <div class="atomic-number">${atomicNumber}</div>
+        <div class="element-symbol">${symbol}</div>
+        <div class="element-name">${name}</div>
+        <div class="atomic-weight">${weight}</div>
+    `;
+    idNumber++
+    document.body.appendChild(elementDiv);
+    dragElement(elementDiv);   
+    return elementDiv;
+}
 
+
+
+function placeElement(x,y) {    
+  createPeriodicElement(1,"H","Hydrogen",1.008,x,y)    
+}
+
+onload = function() {
+  // TODO: Buscar otra manera de colocar los elementos iniciales
+  let maxX = innerWidth - 40;
+  let maxY = innerHeight - 60;
+  const sizeX = maxX/5
+  const sizeY = maxY/5
+  for(let x = 10; x < maxX; x += sizeX){
+    for(let y = 10; y < maxY; y += sizeY){
+      placeElement(x,y)
+    }
+  }
+}
+
+/** Contiene toda la funcionalidad de movimiento */
 function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+  elmnt.addEventListener("dblclick", (event) => {console.log("hacer que se cree una copia del elemento")});
   elmnt.onmousedown = dragMouseDown;
   function dragMouseDown(e) {
     e = e || window.event;
@@ -35,6 +113,7 @@ function dragElement(elmnt) {
     // get the mouse cursor position at startup:
     pos3 = e.clientX;
     pos4 = e.clientY;
+    elmnt.classList.add("hold")
     document.onmouseup = closeDragElement;
     // call a function whenever the cursor moves:
     document.onmousemove = elementDrag;
@@ -57,53 +136,31 @@ function dragElement(elmnt) {
     /* stop moving when mouse button is released:*/
     document.onmouseup = null;
     document.onmousemove = null;
+    elmnt.classList.remove("hold")
 
-    // detecta el elemento que esta bajo el que esta siendo arrastrado
-    elmnt.style.pointerEvents = 'none'
-    const dropTarget = document.elementFromPoint(event.clientX, event.clientY);
-    elmnt.style.pointerEvents = 'auto'
+    const rect = elmnt.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    const nearbyElements = document.elementsFromPoint(centerX, centerY);
     
-  if (dropTarget && dropTarget.classList.contains('element')) {
-      // Fusionar elementos
-      dropTarget.classList.add('fused');
-      dropTarget.append("!")
-      elmnt.style.display = 'none'; // Oculta el elemento arrastrado
-  }
-  }
+    for (const target of nearbyElements) {
+        if (target !== elmnt && target.classList.contains('periodic-element')) {
+            const targetRect = target.getBoundingClientRect();
+            const distance = Math.hypot(
+                centerX - (targetRect.left + targetRect.width / 2),
+                centerY - (targetRect.top + targetRect.height / 2)
+            );
 
-  // Agregar en lugares aleatorios
-  const imgPoss = [];
-  const size = 40
-
-
-  let maxX, maxY;
-
-  function placeElement(x,y) {
-      const imgSrc = imgPoss.length;
-      const parser = new DOMParser();
- 
-        
-          var link = `<div id="element${imgSrc}" class="element" style="left: ${x}px; top: ${y}px;">H</div>`;
-         
-        // Parse the element string
-        const doc = parser.parseFromString(link, 'text/html');
-        const element = doc.body.firstChild;
-        document.body.appendChild(element)
-          
-          imgPoss.push({x, y}); // record all img positions esto no es necesario, cambiarlo por una variable que lleve la cuenta
-          dragElement(element);
-      
-  }
-  
-  // Hay que mover esto fuera de la funcion dragElement()
-  onload = function() {
-      maxX = innerWidth;
-      maxY = innerHeight;
-      for(let x = maxX; x > 0; x -= size){
-        for(let y = maxY; y > 0; y -= size){
-          placeElement(x,y)
+            if (distance < rect.width) {  // Adjust this value to change fusion distance
+                // Fusion logic
+                target.classList.add('fused');
+                target.append("!");
+                elmnt.remove();
+                break;
+            }
         }
-      }
+    }
   }
 }
 </script>
