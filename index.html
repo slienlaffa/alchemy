@@ -3,10 +3,11 @@
 <style>
   :root {
   color-scheme: light dark;
+  --square: 150px;
 }
 body {
-  color: light-dark(#121212, #ffffffd0);
-  background-color: light-dark(#ffffffd0, #121212);
+  color: light-dark(#050607, #ffffffd0);
+  background-color: light-dark(#ffffffd0, #050607);
 }
 .atomic-number {
   position: absolute;
@@ -49,9 +50,9 @@ body {
   font-family: Arial, sans-serif;
   border-radius: 5px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-  width: 150px;
-  height: 150px;
-  outline: 5px solid rgb(17, 31, 160);
+  width: var(--square);
+  height: var(--square);
+  outline: 5px solid rgb(12, 21, 111);
 }
 .fused{
   background-color: #2222ff;
@@ -64,18 +65,26 @@ body {
 
 <script>
 let idNumber = 0;
-function createPeriodicElement(atomicNumber, symbol, name, weight, x, y) {
+// Load the periodic table data
+let periodicTableData;
+fetch('periodic-table-lookup.json')
+  .then(response => response.json())
+  .then(data => {
+    periodicTableData = data;
+  })
+  .catch(error => console.error('Error loading periodic table data:', error));
+  
+function createPeriodicElement(element, x, y) {
     const elementDiv = document.createElement('div');
     elementDiv.className = 'periodic-element';
     elementDiv.style.left = `${x}px`;
     elementDiv.style.top = `${y}px`;
     elementDiv.id = `element${idNumber}`;
-
     elementDiv.innerHTML = `
-        <div class="atomic-number">${atomicNumber}</div>
-        <div class="element-symbol">${symbol}</div>
-        <div class="element-name">${name}</div>
-        <div class="atomic-weight">${weight}</div>
+        <div class="atomic-number">${element.number}</div>
+        <div class="element-symbol">${element.symbol}</div>
+        <div class="element-name">${element.name}</div>
+        <div class="atomic-weight">${element.atomic_mass}</div>
     `;
     idNumber++
     document.body.appendChild(elementDiv);
@@ -83,14 +92,17 @@ function createPeriodicElement(atomicNumber, symbol, name, weight, x, y) {
     return elementDiv;
 }
 
+function getElement(number){
+  return periodicTableData[periodicTableData.order[number - 1]]
+}
 
-
-function placeElement(x,y) {    
-  createPeriodicElement(1,"H","Hydrogen",1.008,x,y)    
+function placeElement(x,y) {
+  const element = getElement(1)
+  createPeriodicElement(element,x,y)    
 }
 
 onload = function() {
-  // TODO: Buscar otra manera de colocar los elementos iniciales
+  // TODO: Buscar otra manera de colocar los elementos iniciales, alguna animacion
   let maxX = innerWidth - 40;
   let maxY = innerHeight - 60;
   const sizeX = maxX/5
@@ -105,7 +117,12 @@ onload = function() {
 /** Contiene toda la funcionalidad de movimiento */
 function dragElement(elmnt) {
   var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  elmnt.addEventListener("dblclick", (event) => {console.log("hacer que se cree una copia del elemento")});
+  elmnt.addEventListener("dblclick", (event) => {
+    const newElement = getElement(elmnt.querySelector('.atomic-number').textContent)
+    const rect = elmnt.getBoundingClientRect();
+    const offset = (rect.width / 2) - 1;
+    createPeriodicElement(newElement,elmnt.offsetLeft + offset,elmnt.offsetTop + offset);
+  });
   elmnt.onmousedown = dragMouseDown;
   function dragMouseDown(e) {
     e = e || window.event;
@@ -154,9 +171,20 @@ function dragElement(elmnt) {
 
             if (distance < rect.width) {  // Adjust this value to change fusion distance
                 // Fusion logic
-                target.classList.add('fused');
-                target.append("!");
-                elmnt.remove();
+                const newAtomicNumber = parseInt(elmnt.querySelector('.atomic-number').textContent) +
+                                        parseInt(target.querySelector('.atomic-number').textContent);
+                
+                const newElement = getElement(newAtomicNumber);
+                
+                if (newElement) {
+                    createPeriodicElement(newElement, target.offsetLeft, target.offsetTop);                    
+                    target.remove();
+                    elmnt.remove();
+                } else {
+                    console.log("Fusion resulted in an unknown element");
+                    target.classList.add('fused');
+                    elmnt.remove();
+                }
                 break;
             }
         }
