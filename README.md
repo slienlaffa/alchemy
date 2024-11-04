@@ -20,6 +20,6 @@ How to install:
 3. `npm run dev` or `bun run dev`
 4. Open `localhost:5173` in your browser or whatever port it gives you
 
-The only reason you need to run a server is because of CORS, the data is in a json file. There are workarounds but this is simpler.
+The only reason you need to run a server is because of CORS, the data is in a json file. You can open the index file in any live server.
 
 *Periodic table from: https://github.com/Bowserinator/Periodic-Table-JSON*
