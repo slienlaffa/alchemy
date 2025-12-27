@@ -60,6 +60,10 @@ function bigBang() {
 }
 
 /** Contiene toda la funcionalidad de movimiento */
+/**
+ * Vi una version con el siguiente atributo:
+ * style="transform: translate3d(-8px, -80px, 0px);"
+ */
 function dragElement(elmnt) {
     var pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
     elmnt.addEventListener("dblclick", (event) => {
